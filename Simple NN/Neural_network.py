@@ -7,6 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import f1_score
 
 import matplotlib.pyplot as plt
 
@@ -175,8 +176,12 @@ model.load_state_dict(best_model_state)
 # TEST EVALUATION
 # -------------------------
 model.eval()
+
 correct = 0
 total = 0
+
+all_preds = []
+all_labels = []
 
 with torch.no_grad():
     for X_batch, y_batch in test_loader:
@@ -184,12 +189,24 @@ with torch.no_grad():
         y_batch = y_batch.to(device).view(-1, 1)
 
         outputs = model(X_batch)
+
+        # Convert logits -> probabilities -> binary predictions
         preds = (torch.sigmoid(outputs) > 0.5).float()
 
+        # Accuracy
         correct += (preds == y_batch).sum().item()
         total += y_batch.size(0)
 
-print("\nFinal Test Accuracy:", correct / total)
+        # Store for F1 score
+        all_preds.extend(preds.cpu().numpy().flatten())
+        all_labels.extend(y_batch.cpu().numpy().flatten())
+
+# Calculate metrics
+test_accuracy = correct / total
+test_f1 = f1_score(all_labels, all_preds)
+
+print("\nFinal Test Accuracy:", test_accuracy)
+print("Final Test F1 Score:", test_f1)
 
 # -------------------------
 # LOSS CURVE (LT vs LV)
