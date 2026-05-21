@@ -1,0 +1,1 @@
+First run preprocess.py then Neural_network.py and close the generated graph then predict.py
